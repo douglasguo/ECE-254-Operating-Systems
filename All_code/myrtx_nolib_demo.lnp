@@ -1,0 +1,4 @@
+--cpu Cortex-M3 "svc_table.o" "hal_cm3.o" "rt_event.o" "rt_list.o" "rt_mailbox.o" "rt_membox.o" "rt_mutex.o" "rt_robin.o" "rt_semaphore.o" "rt_system.o" "rt_task.o" "rt_time.o" "rt_timer.o" "rt_mem.o" "rt_posixqueue.o" "startup_lpc17xx.o" "main.o" "retarget.o" "rtx_conf_cm.o" "serial.o" "system_lpc17xx.o" "led.o" "os_mem.o" "posix_queue.o" "glcd_spi_lpc1700.o" --strict --scatter "myrtx_nolib_demo.sct" 
+--autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\myrtx_nolib_demo.map" -o "myrtx_nolib_demo.axf"

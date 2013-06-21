@@ -1,0 +1,13 @@
+rt_system.o: rtx_src\rt_System.c
+rt_system.o: rtx_src\rt_TypeDef.h
+rt_system.o: rtx_src\RTX_Config.h
+rt_system.o: rtx_src\rt_Task.h
+rt_system.o: rtx_src\rt_System.h
+rt_system.o: rtx_src\rt_Event.h
+rt_system.o: rtx_src\rt_List.h
+rt_system.o: rtx_src\rt_Mailbox.h
+rt_system.o: rtx_src\rt_Semaphore.h
+rt_system.o: rtx_src\rt_Time.h
+rt_system.o: rtx_src\rt_Timer.h
+rt_system.o: rtx_src\rt_Robin.h
+rt_system.o: rtx_src\rt_HAL_CM.h

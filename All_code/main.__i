@@ -1,0 +1,1 @@
+-c --cpu Cortex-M3 -g -O0 --apcs=interwork --asm --interleave --asm_dir ".\\" -I "C:\Software\Keil\ARM\CMSIS\Include" -I "C:\Software\Keil\ARM\INC\NXP\LPC17xx" -o "main.o" --list_dir ".\\" --list --omf_browse "main.crf" --depend "main.d" "src\main.c"

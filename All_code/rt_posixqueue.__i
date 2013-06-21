@@ -1,0 +1,1 @@
+-c --cpu Cortex-M3 -g -O0 --apcs=interwork --asm --interleave --asm_dir ".\\" -I "C:\Software\Keil\ARM\CMSIS\Include" -I "C:\Software\Keil\ARM\INC\NXP\LPC17xx" -o "rt_posixqueue.o" --list_dir ".\\" --list --omf_browse "rt_posixqueue.crf" --depend "rt_posixqueue.d" "rtx_src\rt_PosixQueue.c"

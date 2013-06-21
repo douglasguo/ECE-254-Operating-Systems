@@ -1,0 +1,11 @@
+rt_mem.o: rtx_src\rt_Mem.c
+rt_mem.o: rtx_src\rt_TypeDef.h
+rt_mem.o: rtx_src\RTX_Config.h
+rt_mem.o: rtx_src\rt_System.h
+rt_mem.o: rtx_src\rt_MemBox.h
+rt_mem.o: rtx_src\rt_HAL_CM.h
+rt_mem.o: rtx_src\rt_List.h
+rt_mem.o: rtx_src\rt_Task.h
+rt_mem.o: C:\Software\Keil\ARM\RV31\INC\stdio.h
+rt_mem.o: C:\Software\Keil\ARM\RV31\INC\stdlib.h
+rt_mem.o: rtx_src\Serial.h

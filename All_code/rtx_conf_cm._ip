@@ -1,0 +1,1 @@
+"src\RTX_Conf_CM.c" -E -c --cpu Cortex-M3 -O0 --apcs=interwork -I "C:\Software\Keil\ARM\CMSIS\Include" -I "C:\Software\Keil\ARM\INC\NXP\LPC17xx" -o "rtx_conf_cm.i" --list_dir ".\\" --list

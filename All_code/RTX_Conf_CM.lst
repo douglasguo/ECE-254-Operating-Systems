@@ -1,0 +1,1185 @@
+L 1 "src\RTX_Conf_CM.c"
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - RTX
+N *----------------------------------------------------------------------------
+N *      Name:    RTX_CONFIG.C
+N *      Purpose: Configuration of RTX Kernel for Cortex-M
+N *      Rev.:    V4.20
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2011 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#include <RTL.h>
+L 1 "C:\Software\Keil\ARM\RV31\INC\RTL.h" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - A P I 
+N *----------------------------------------------------------------------------
+N *      Name:    RTL.H 
+N *      Purpose: Application Programming Interface. 
+N *      Rev.:    V4.20
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2011 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __RTL_H__
+N#define __RTL_H__
+N
+N/* RL-ARM version number. */
+N#define __RL_ARM_VER    420
+N 
+N#define __task          __declspec(noreturn)
+N
+N#ifndef NULL
+N #ifdef __cplusplus              // EC++
+S  #define NULL          0
+N #else
+N  #define NULL          ((void *) 0)
+N #endif
+N#endif
+N
+N#ifndef EOF
+N #define EOF            -1
+N#endif
+N
+N#ifndef __size_t
+N #define __size_t       1
+N typedef unsigned int   size_t;
+N#endif
+N
+Ntypedef signed char     S8;
+Ntypedef unsigned char   U8;
+Ntypedef short           S16;
+Ntypedef unsigned short  U16;
+Ntypedef int             S32;
+Ntypedef unsigned int    U32;
+Ntypedef long long       S64;
+Ntypedef unsigned long long U64;
+Ntypedef unsigned char   BIT;
+Ntypedef unsigned int    BOOL;
+N
+N#ifndef __TRUE
+N #define __TRUE         1
+N#endif
+N#ifndef __FALSE
+N #define __FALSE        0
+N#endif
+N
+N#ifdef __BIG_ENDIAN
+S #define U32_LE(v) (__rev(v))
+S #define U16_LE(v) (__rev(v) >> 16) 
+S #define U32_BE(v)       (v)
+S #define U16_BE(v)       (v)
+N#else
+N #define U32_BE(v) (__rev(v))
+N #define U16_BE(v) (__rev(v) >> 16) 
+N #define U32_LE(v)       (v)
+N #define U16_LE(v)       (v)
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N *                             RTX Kernel API
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __cplusplus               // EC++
+Sextern "C"  {
+N#endif
+N
+N/* Definition of Semaphore type */
+Ntypedef U32 OS_SEM[2];
+N
+N/* Definition of Mailbox type */
+N#define os_mbx_declare(name,cnt)    U32 name [4 + cnt]
+Ntypedef U32 OS_MBX[];
+N
+N/* Definition of Mutex type */
+Ntypedef U32 OS_MUT[3];
+N
+N/* Task Identification number. */
+Ntypedef U32 OS_TID;
+N
+N/* Function return of system calls returning an object identification */
+Ntypedef void *OS_ID;
+N
+N/* Function return of system calls indicating an event or completion state */
+Ntypedef U32 OS_RESULT;
+N
+N/* Return codes */
+N#define OS_R_TMO        0x01
+N#define OS_R_EVT        0x02
+N#define OS_R_SEM        0x03
+N#define OS_R_MBX        0x04
+N#define OS_R_MUT        0x05
+N
+N#define OS_R_OK         0x00
+N#define OS_R_NOK        0xff
+N
+N#define OS_TCB_SIZE     48
+N#define OS_TMR_SIZE     8
+N
+N/* Error Codes */
+N#define OS_ERR_STK_OVF  1
+N#define OS_ERR_FIFO_OVF 2
+N#define OS_ERR_MBX_OVF  3
+N
+N#if !(defined(__TARGET_ARCH_6S_M) || defined(__TARGET_ARCH_7_M) || defined(__TARGET_ARCH_7E_M))
+X#if !(0L || 1L || 0L)
+S
+S/*----------------------------------------------------------------------------
+S *      Functions ARM
+S *---------------------------------------------------------------------------*/
+S
+S/* Task Management */
+S#define os_sys_init(tsk)              os_sys_init0(tsk,0,NULL)
+S#define os_sys_init_prio(tsk,prio)    os_sys_init0(tsk,prio,NULL)
+S#define os_sys_init_user(tsk,prio,stk,size)                                   \
+S                                      os_sys_init0(tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_sys_init0(tsk,prio|(size<<8),stk)
+S#define os_tsk_create(tsk,prio)       os_tsk_create0(tsk,prio,NULL,NULL)
+S#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+S                                      os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+S#define os_tsk_create_ex(tsk,prio,argv) os_tsk_create_ex0(tsk,prio,NULL,argv)
+S#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+S                                      os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+S#define os_tsk_delete_self()          os_tsk_delete(0)
+S#define os_tsk_prio_self(prio)        os_tsk_prio(0,prio)
+S#define isr_tsk_get()                 os_tsk_self()
+S
+Sextern void      os_sys_init0 (void (*task)(void), U32 prio_stksz, void *stk);
+Sextern OS_TID    os_tsk_create0 (void (*task)(void), U32 prio_stksz, 
+S                                 void *stk, void *argv);
+Sextern OS_TID    os_tsk_create_ex0 (void (*task)(void *), U32 prio_stksz, 
+S                                    void *stk, void *argv);
+Sextern OS_TID    os_tsk_self (void);
+Sextern void      os_tsk_pass (void);
+Sextern OS_RESULT os_tsk_prio (OS_TID task_id, U8 new_prio);
+Sextern OS_RESULT os_tsk_delete (OS_TID task_id);
+S
+S/* Event flag Management */
+S#define os_evt_wait_or(wflags,tmo)      os_evt_wait(wflags,tmo,__FALSE)
+S#define os_evt_wait_and(wflags,tmo)     os_evt_wait(wflags,tmo,__TRUE)
+S
+Sextern OS_RESULT os_evt_wait (U16 wait_flags, U16 timeout, BOOL and_wait);
+Sextern void      os_evt_set (U16 event_flags, OS_TID task_id);
+Sextern void      os_evt_clr (U16 clear_flags, OS_TID task_id);
+Sextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+Sextern U16       os_evt_get (void);
+S
+S/* Semaphore Management */
+Sextern void      os_sem_init (OS_ID semaphore, U16 token_count);
+Sextern OS_RESULT os_sem_send (OS_ID semaphore);
+Sextern OS_RESULT os_sem_wait (OS_ID semaphore, U16 timeout);
+Sextern void      isr_sem_send (OS_ID semaphore);
+S
+S/* Mailbox Management */
+S#define isr_mbx_check(mbx)              os_mbx_check(mbx)
+S
+Sextern void      os_mbx_init (OS_ID mailbox, U16 mbx_size);
+Sextern OS_RESULT os_mbx_send (OS_ID mailbox, void *message_ptr, U16 timeout);
+Sextern OS_RESULT os_mbx_wait (OS_ID mailbox, void  **message, U16 timeout);
+Sextern OS_RESULT os_mbx_check (OS_ID mailbox);
+Sextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Sextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+S
+S/* Mutex Management */
+Sextern void      os_mut_init (OS_ID mutex);
+Sextern OS_RESULT os_mut_release (OS_ID mutex);
+Sextern OS_RESULT os_mut_wait (OS_ID mutex, U16 timeout);
+S
+S/* Time Management */
+Sextern void      os_dly_wait (U16 delay_time);
+Sextern void      os_itv_set (U16 interval_time);
+Sextern void      os_itv_wait (void);
+S
+S/* User Timer Management */
+Sextern OS_ID     os_tmr_create (U16 tcnt, U16 info);
+Sextern OS_ID     os_tmr_kill (OS_ID timer);
+S
+S/* System Functions */
+Sextern void      tsk_lock (void) __swi (5);
+Sextern void      tsk_unlock (void);
+S
+S/* Fixed Memory Block Management Functions */
+Sextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Sextern void     *_alloc_box (void *box_mem) __swi (1);
+Sextern void     *_calloc_box (void *box_mem);
+Sextern int       _free_box (void *box_mem, void *box) __swi (2);
+S
+N#else
+N
+N/*----------------------------------------------------------------------------
+N *      Functions Cortex-M
+N *---------------------------------------------------------------------------*/
+N
+N#define __SVC_0         __svc_indirect(0)
+N
+N/* Task Management */
+Nextern void      os_set_env    (void);
+Nextern void      rt_sys_init   (void (*task)(void), U8 priority, void *stk);
+Nextern void      rt_tsk_pass   (void);
+Nextern OS_TID    rt_tsk_self   (void);
+Nextern OS_RESULT rt_tsk_prio   (OS_TID task_id, U8 new_prio);
+Nextern OS_TID    rt_tsk_create (void (*task)(void), U8 priority, void *stk, void *argv);
+Nextern OS_RESULT rt_tsk_delete (OS_TID task_id);
+N
+N#define os_sys_init(tsk)              os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+X#define os_sys_init(tsk)              os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+N#define os_sys_init_user(tsk,prio,stk,size)                                   \
+N                                      os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+N#define os_sys_init_prio(tsk,prio)    os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+X#define os_sys_init_prio(tsk,prio)    os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+N#define os_tsk_create(tsk,prio)       _os_tsk_create((U32)rt_tsk_create,tsk,prio,NULL,NULL)
+N#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+N                                      _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+N#define os_tsk_create_ex(tsk,prio,argv) _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio,NULL,argv)
+N#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+N                                      _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+N#define os_tsk_self()                 _os_tsk_self((U32)rt_tsk_self)
+N#define os_tsk_pass()                 _os_tsk_pass((U32)rt_tsk_pass)
+N#define os_tsk_prio(task_id,new_prio) _os_tsk_prio((U32)rt_tsk_prio,task_id,new_prio)
+N#define os_tsk_prio_self(prio)        _os_tsk_prio((U32)rt_tsk_prio,0,prio)
+N#define os_tsk_delete(task_id)        _os_tsk_delete((U32)rt_tsk_delete,task_id)
+N#define os_tsk_delete_self()          _os_tsk_delete((U32)rt_tsk_delete, 0)
+N#define isr_tsk_get()                 rt_tsk_self()
+N
+Nextern void      _os_sys_init(U32 p, void (*task)(void), U32 prio_stksz,
+N                                     void *stk)                        __SVC_0;
+X                                     void *stk)                        __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create (U32 p, void (*task)(void), U32 prio_stksz,
+N                                        void *stk, void *argv)         __SVC_0;
+X                                        void *stk, void *argv)         __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create_ex (U32 p, void (*task)(void *), U32 prio_stksz,
+N                                           void *stk, void *argv)      __SVC_0;
+X                                           void *stk, void *argv)      __svc_indirect(0);
+Nextern OS_TID    _os_tsk_self (U32 p)                                  __SVC_0;
+Xextern OS_TID    _os_tsk_self (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_pass (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_pass (U32 p)                                  __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __SVC_0;
+Xextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __SVC_0;
+Xextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __svc_indirect(0);
+N
+N/* Event flag Management */
+Nextern OS_RESULT rt_evt_wait (U16 wait_flags,  U16 timeout, BOOL and_wait);
+Nextern void      rt_evt_set  (U16 event_flags, OS_TID task_id);
+Nextern void      rt_evt_clr  (U16 clear_flags, OS_TID task_id);
+Nextern U16       rt_evt_get  (void);
+N
+N#define os_evt_wait_or(wflags,tmo)    _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__FALSE)
+N#define os_evt_wait_and(wflags,tmo)   _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__TRUE)
+N#define os_evt_set(evt_flags,task_id) _os_evt_set((U32)rt_evt_set,evt_flags,task_id)
+N#define os_evt_clr(clr_flags,task_id) _os_evt_clr((U32)rt_evt_clr,clr_flags,task_id)
+N#define os_evt_get()                  _os_evt_get((U32)rt_evt_get)
+N
+Nextern OS_RESULT _os_evt_wait(U32 p, U16 wait_flags, U16 timeout,
+N                                     BOOL and_wait)                    __SVC_0;
+X                                     BOOL and_wait)                    __svc_indirect(0);
+Nextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern U16       _os_evt_get (U32 p)                                   __SVC_0;
+Xextern U16       _os_evt_get (U32 p)                                   __svc_indirect(0);
+Nextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+N
+N/* Semaphore Management */
+Nextern void      rt_sem_init (OS_ID semaphore, U16 token_count);
+Nextern OS_RESULT rt_sem_send (OS_ID semaphore);
+Nextern OS_RESULT rt_sem_wait (OS_ID semaphore, U16 timeout);
+N
+N#define os_sem_init(sem,t_count)     _os_sem_init((U32)rt_sem_init,sem,t_count)
+N#define os_sem_send(sem)             _os_sem_send((U32)rt_sem_send,sem)
+N#define os_sem_wait(sem,tmo)         _os_sem_wait((U32)rt_sem_wait,sem,tmo)
+N
+Nextern void      _os_sem_init (U32 p, OS_ID semaphore, 
+N                                      U16 token_count)                 __SVC_0;
+X                                      U16 token_count)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __SVC_0;
+Xextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __SVC_0;
+Xextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __svc_indirect(0);
+Nextern void      isr_sem_send (OS_ID semaphore);
+N
+N/* Mailbox Management */
+Nextern void      rt_mbx_init  (OS_ID mailbox, U16 mbx_size);
+Nextern OS_RESULT rt_mbx_send  (OS_ID mailbox, void *p_msg,    U16 timeout);
+Nextern OS_RESULT rt_mbx_wait  (OS_ID mailbox, void **message, U16 timeout);
+Nextern OS_RESULT rt_mbx_check (OS_ID mailbox);
+N
+N#define os_mbx_init(mbx,mbx_size)     _os_mbx_init((U32)rt_mbx_init,mbx,mbx_size)
+N#define os_mbx_send(mbx,p_msg,tmo)    _os_mbx_send((U32)rt_mbx_send,mbx,p_msg,tmo)
+N#define os_mbx_wait(mbx,message,tmo)  _os_mbx_wait((U32)rt_mbx_wait,mbx,message,tmo)
+N#define os_mbx_check(mbx)             _os_mbx_check((U32)rt_mbx_check,mbx)
+N#define isr_mbx_check(mbx)            rt_mbx_check(mbx)
+N
+Nextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __SVC_0;
+Xextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_send (U32 p, OS_ID mailbox, void *message_ptr,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_wait (U32 p, OS_ID mailbox, void  **message,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __SVC_0;
+Xextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __svc_indirect(0);
+Nextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Nextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+N
+N/* Mutex Management */
+Nextern void      rt_mut_init    (OS_ID mutex);
+Nextern OS_RESULT rt_mut_release (OS_ID mutex);
+Nextern OS_RESULT rt_mut_wait    (OS_ID mutex, U16 timeout);
+N
+N#define os_mut_init(mutex)         _os_mut_init((U32)rt_mut_init,mutex)
+N#define os_mut_release(mutex)      _os_mut_release((U32)rt_mut_release,mutex)
+N#define os_mut_wait(mutex,timeout) _os_mut_wait((U32)rt_mut_wait,mutex,timeout)
+N
+Nextern void      _os_mut_init (U32 p, OS_ID mutex)                     __SVC_0;
+Xextern void      _os_mut_init (U32 p, OS_ID mutex)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __SVC_0;
+Xextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __svc_indirect(0);
+Nextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __SVC_0;
+Xextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __svc_indirect(0);
+N
+N/* Time Management */
+Nextern void      rt_dly_wait (U16 delay_time);
+Nextern void      rt_itv_set  (U16 interval_time);
+Nextern void      rt_itv_wait (void);
+N
+N#define os_dly_wait(delay_time)    _os_dly_wait((U32)rt_dly_wait,delay_time)
+N#define os_itv_set(interval_time)  _os_itv_set((U32)rt_itv_set,interval_time)
+N#define os_itv_wait()              _os_itv_wait((U32)rt_itv_wait)
+N
+Nextern void      _os_dly_wait (U32 p, U16 delay_time)                  __SVC_0;
+Xextern void      _os_dly_wait (U32 p, U16 delay_time)                  __svc_indirect(0);
+Nextern void      _os_itv_set (U32 p, U16 interval_time)                __SVC_0;
+Xextern void      _os_itv_set (U32 p, U16 interval_time)                __svc_indirect(0);
+Nextern void      _os_itv_wait (U32 p)                                  __SVC_0;
+Xextern void      _os_itv_wait (U32 p)                                  __svc_indirect(0);
+N
+N/* User Timer Management */
+Nextern OS_ID     rt_tmr_create (U16 tcnt, U16 info);
+Nextern OS_ID     rt_tmr_kill   (OS_ID timer);
+N
+N#define os_tmr_create(tcnt,info)   _os_tmr_create((U32)rt_tmr_create,tcnt,info)
+N#define os_tmr_kill(timer)         _os_tmr_kill((U32)rt_tmr_kill,timer)
+N
+Nextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __SVC_0;
+Xextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __svc_indirect(0);
+Nextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __SVC_0;
+Xextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __svc_indirect(0);
+N
+N/* System Functions */
+Nextern void      rt_tsk_lock   (void);
+Nextern void      rt_tsk_unlock (void);
+N
+N#define tsk_lock()                 _os_tsk_lock((U32)rt_tsk_lock)
+N#define tsk_unlock()               _os_tsk_unlock((U32)rt_tsk_unlock)
+N
+Nextern void      _os_tsk_lock (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_lock (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_unlock (U32 p)                                __SVC_0;
+Xextern void      _os_tsk_unlock (U32 p)                                __svc_indirect(0);
+N
+N/* Fixed Memory Block Management Functions */
+Nextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Nextern void     *_alloc_box (void *box_mem);
+Nextern void     *_calloc_box (void *box_mem);
+Nextern int       _free_box (void *box_mem, void *box);
+N
+N#endif
+N
+N#define BOX_ALIGN_8     0x80000000
+N#define _declare_box(pool,size,cnt)   U32 pool[(((size)+3)/4)*(cnt) + 3]
+N#define _declare_box8(pool,size,cnt)  U64 pool[(((size)+7)/8)*(cnt) + 2]
+N#define _init_box8(pool,size,bsize)   _init_box (pool,size,bsize | BOX_ALIGN_8)
+N
+N/* For compatibility with older configurations.*/
+N#define os_stk_overflow         os_error
+N
+N/*----------------------------------------------------------------------------
+N *                        Flash File System API
+N *---------------------------------------------------------------------------*/
+N
+Ntypedef struct {                        /* RL Time format (FFS, TCPnet)      */
+N  U8  hr;                               /* Hours    [0..23]                  */
+N  U8  min;                              /* Minutes  [0..59]                  */
+N  U8  sec;                              /* Seconds  [0..59]                  */
+N  U8  day;                              /* Day      [1..31]                  */
+N  U8  mon;                              /* Month    [1..12]                  */
+N  U16 year;                             /* Year     [1980..2107]             */
+N} RL_TIME;
+N
+Ntypedef struct {                        /* Search info record                */
+N  S8  name[256];                        /* Name                              */
+N  U32 size;                             /* File size in bytes                */
+N  U16 fileID;                           /* System Identification             */
+N  U8  attrib;                           /* Attributes                        */
+N  RL_TIME time;                         /* Create/Modify Time                */
+N} FINFO;
+N
+Nextern int finit (const char *drive);
+Nextern int funinit (const char *drive);
+Nextern int fdelete (const char *filename);
+Nextern int frename (const char *oldname, const char *newname);
+Nextern int ffind (const char *pattern, FINFO *info);
+Nextern U64 ffree (const char *drive);
+Nextern int fformat (const char *drive);
+Nextern int fanalyse (const char *drive);
+Nextern int fcheck (const char *drive);
+Nextern int fdefrag (const char *drive);
+N
+N/* The following macros provide for common functions */
+N#define unlink(fn)      fdelete(fn);
+N
+N/*----------------------------------------------------------------------------
+N *                             TCPnet API
+N *---------------------------------------------------------------------------*/
+N
+N/* UDP Options */
+N#define UDP_OPT_SEND_CS    0x01   /* Calculate Checksum for UDP send frames  */
+N#define UDP_OPT_CHK_CS     0x02   /* Verify Checksum for received UDP frames */
+N
+N/* TCP Socket Types */
+N#define TCP_TYPE_SERVER    0x01   /* Socket Type Server (open for listening) */
+N#define TCP_TYPE_CLIENT    0x02   /* Socket Type Client (initiate connect)   */
+N#define TCP_TYPE_DELAY_ACK 0x04   /* Socket Type Delayed Acknowledge         */
+N#define TCP_TYPE_FLOW_CTRL 0x08   /* Socket Type Flow Control                */
+N#define TCP_TYPE_KEEP_ALIVE 0x10  /* Socket Type Keep Alive                  */
+N#define TCP_TYPE_CLIENT_SERVER (TCP_TYPE_SERVER | TCP_TYPE_CLIENT)
+N
+N/* TCP Callback Events */
+N#define TCP_EVT_CONREQ     0      /* Connect request received event          */
+N#define TCP_EVT_CONNECT    1      /* Connection established event            */
+N#define TCP_EVT_CLOSE      2      /* Connection was properly closed          */
+N#define TCP_EVT_ABORT      3      /* Connection is for some reason aborted   */
+N#define TCP_EVT_ACK        4      /* Previously send data acknowledged       */
+N#define TCP_EVT_DATA       5      /* Data received event                     */
+N
+N/* TCP States */
+N#define TCP_STATE_FREE     0      /* Entry is free and unused                */
+N#define TCP_STATE_CLOSED   1      /* Entry allocated, socket still closed    */
+N#define TCP_STATE_LISTEN   2      /* Socket waiting for incoming connection  */
+N#define TCP_STATE_SYN_REC  3      /* SYN frame received                      */
+N#define TCP_STATE_SYN_SENT 4      /* SYN packet sent to establish a connect. */
+N#define TCP_STATE_FINW1    5      /* Tcp_close started FIN packet was sent   */
+N#define TCP_STATE_FINW2    6      /* Our FIN ack-ed, waiting for remote FIN  */
+N#define TCP_STATE_CLOSING  7      /* Received FIN independently of our FIN   */
+N#define TCP_STATE_LAST_ACK 8      /* Waiting for last ACK for our FIN        */
+N#define TCP_STATE_TWAIT    9      /* Timed waiting for 2MSL                  */
+N#define TCP_STATE_CONNECT  10     /* TCP Connection established              */
+N
+N/* DNS Callback Events */
+N#define DNS_EVT_SUCCESS    0      /* Host name successfully resolved         */
+N#define DNS_EVT_NONAME     1      /* DNS Error, no such name                 */
+N#define DNS_EVT_TIMEOUT    2      /* Timeout resolving host                  */
+N#define DNS_EVT_ERROR      3      /* Erroneous response packet               */
+N
+N/* DNS 'get_host_by_name()' result codes */
+N#define DNS_RES_OK         0      /* Function finished OK                    */
+N#define DNS_ERROR_BUSY     1      /* DNS Client busy, can't process request  */
+N#define DNS_ERROR_LABEL    2      /* Host name Label too long                */
+N#define DNS_ERROR_NAME     3      /* Host name loo long                      */
+N#define DNS_ERROR_NOSRV    4      /* Prim. DNS server not specified (0.0.0.0)*/
+N#define DNS_ERROR_UDPSEND  5      /* UDP Send frame error                    */
+N
+N/* SMTP Callback Events */
+N#define SMTP_EVT_SUCCESS   0      /* Email successfully sent                 */
+N#define SMTP_EVT_TIMEOUT   1      /* Timeout sending email                   */
+N#define SMTP_EVT_ERROR     2      /* Error when sending email                */
+N
+N/* ARP Cache Entry types */
+N#define ARP_FIXED_IP       0      /* Fixed IP adrs is refreshed after tout   */
+N#define ARP_TEMP_IP        1      /* Temp adrs is removed after timeout      */
+N
+Nextern void init_TcpNet (void);
+Nextern void main_TcpNet (void);
+Nextern void timer_tick (void);
+Nextern U8   udp_get_socket (U8 tos, U8 opt, 
+N                            U16 (*listener)(U8 socket, U8 *remip, U16 port, U8 *buf, U16 len));
+Nextern BOOL udp_release_socket (U8 socket);
+Nextern BOOL udp_open (U8 socket, U16 locport);
+Nextern BOOL udp_close (U8 socket);
+Nextern BOOL udp_mcast_ttl (U8 socket, U8 ttl);
+Nextern U8  *udp_get_buf (U16 size);
+Nextern BOOL udp_send (U8 socket, U8 *remip, U16 remport, U8 *buf, U16 dlen);
+Nextern U8   tcp_get_socket (U8 type, U8 tos, U16 tout,
+N                            U16 (*listener)(U8 socket, U8 event, U8 *buf, U16 len));
+Nextern BOOL tcp_release_socket (U8 socket);
+Nextern BOOL tcp_listen (U8 socket, U16 locport);
+Nextern BOOL tcp_connect (U8 socket, U8 *remip, U16 remport, U16 locport);
+Nextern U8  *tcp_get_buf (U16 size);
+Nextern U16  tcp_max_dsize (U8 socket);
+Nextern BOOL tcp_check_send (U8 socket);
+Nextern U8   tcp_get_state (U8 socket);
+Nextern BOOL tcp_send (U8 socket, U8 *buf, U16 dlen);
+Nextern BOOL tcp_close (U8 socket);
+Nextern BOOL tcp_abort (U8 socket);
+Nextern void tcp_reset_window (U8 socket);
+Nextern BOOL arp_cache_ip (U8 *ipadr, U8 type);
+Nextern void ppp_listen (char const *user, char const *passw);
+Nextern void ppp_connect (char const *dialnum, char const *user, char const *passw);
+Nextern void ppp_close (void);
+Nextern BOOL ppp_is_up (void);
+Nextern void slip_listen (void);
+Nextern void slip_connect (char const *dialnum);
+Nextern void slip_close (void);
+Nextern BOOL slip_is_up (void);
+Nextern U8   get_host_by_name (U8 *hostn, void (*cbfunc)(U8 event, U8 *host_ip));
+Nextern BOOL smtp_connect (U8 *ipadr, U16 port, void (*cbfunc)(U8 event));
+Nextern void dhcp_disable (void);
+Nextern BOOL igmp_join (U8 *group_ip);
+Nextern BOOL igmp_leave (U8 *group_ip);
+Nextern BOOL snmp_trap (U8 *manager_ip, U8 gen_trap, U8 spec_trap, U16 *obj_list);
+Nextern BOOL snmp_set_community (const char *community);
+N#ifdef __cplusplus               // EC++
+S}
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N  
+N#endif
+N 
+L 13 "src\RTX_Conf_CM.c" 2
+N
+N/*----------------------------------------------------------------------------
+N *      RTX User configuration part BEGIN
+N *---------------------------------------------------------------------------*/
+N
+N//-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
+N//
+N// <h>Task Configuration
+N// =====================
+N//
+N//   <o>Number of concurrent running tasks <0-250>
+N//   <i> Define max. number of tasks that will run at the same time.
+N//   <i> Default: 6
+N#ifndef OS_TASKCNT
+N #define OS_TASKCNT     6
+N#endif
+N
+N//   <o>Number of tasks with user-provided stack <0-250>
+N//   <i> Define the number of tasks that will use a bigger stack.
+N//   <i> The memory space for the stack is provided by the user.
+N//   <i> Default: 0
+N#ifndef OS_PRIVCNT
+N #define OS_PRIVCNT     0
+N#endif
+N
+N//   <o>Task stack size [bytes] <20-4096:8><#/4>
+N//   <i> Set the stack size for tasks which is assigned by the system.
+N//   <i> Default: 200
+N#ifndef OS_STKSIZE
+N #define OS_STKSIZE     275
+N#endif
+N
+N// <q>Check for the stack overflow
+N// ===============================
+N// <i> Include the stack checking code for a stack overflow.
+N// <i> Note that additional code reduces the Kernel performance.
+N#ifndef OS_STKCHECK
+N #define OS_STKCHECK    1
+N#endif
+N
+N// <q>Run in privileged mode
+N// =========================
+N// <i> Run all Tasks in privileged mode.
+N// <i> Default: Unprivileged
+N#ifndef OS_RUNPRIV
+N #define OS_RUNPRIV     0
+N#endif
+N
+N// </h>
+N// <h>SysTick Timer Configuration
+N// =============================
+N//   <o>Timer clock value [Hz] <1-1000000000>
+N//   <i> Set the timer clock value for selected timer.
+N//   <i> Default: 6000000  (6MHz)
+N#ifndef OS_CLOCK
+N #define OS_CLOCK       100000000
+N#endif
+N
+N//   <o>Timer tick value [us] <1-1000000>
+N//   <i> Set the timer tick value for selected timer.
+N//   <i> Default: 10000  (10ms)
+N#ifndef OS_TICK
+N #define OS_TICK        10000
+N#endif
+N
+N// </h>
+N
+N// <h>System Configuration
+N// =======================
+N// <e>Round-Robin Task switching
+N// =============================
+N// <i> Enable Round-Robin Task switching.
+N#ifndef OS_ROBIN
+N #define OS_ROBIN       1
+N#endif
+N
+N//   <o>Round-Robin Timeout [ticks] <1-1000>
+N//   <i> Define how long a task will execute before a task switch.
+N//   <i> Default: 5
+N#ifndef OS_ROBINTOUT
+N #define OS_ROBINTOUT   5
+N#endif
+N
+N// </e>
+N
+N//   <o>Number of user timers <0-250>
+N//   <i> Define max. number of user timers that will run at the same time.
+N//   <i> Default: 0  (User timers disabled)
+N#ifndef OS_TIMERCNT
+N #define OS_TIMERCNT    0
+N#endif
+N
+N//   <o>ISR FIFO Queue size<4=>   4 entries  <8=>   8 entries
+N//                         <12=> 12 entries  <16=> 16 entries
+N//                         <24=> 24 entries  <32=> 32 entries
+N//                         <48=> 48 entries  <64=> 64 entries
+N//                         <96=> 96 entries
+N//   <i> ISR functions store requests to this buffer,
+N//   <i> when they are called from the iterrupt handler.
+N//   <i> Default: 16 entries
+N#ifndef OS_FIFOSZ
+N #define OS_FIFOSZ      16
+N#endif
+N
+N// </h>
+N
+N//------------- <<< end of configuration section >>> -----------------------
+N
+N// Standard library system mutexes
+N// ===============================
+N//  Define max. number system mutexes that are used to protect 
+N//  the arm standard runtime library. For microlib they are not used.
+N#ifndef OS_MUTEXCNT
+N #define OS_MUTEXCNT    8
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N *      RTX User configuration part END
+N *---------------------------------------------------------------------------*/
+N
+N#define OS_TRV          ((U32)(((double)OS_CLOCK*(double)OS_TICK)/1E6)-1)
+N
+N/*----------------------------------------------------------------------------
+N *      Global Functions
+N *---------------------------------------------------------------------------*/
+N
+N/*--------------------------- os_idle_demon ---------------------------------*/
+N
+N__task void os_idle_demon (void) {
+X__declspec(noreturn) void os_idle_demon (void) {
+N  /* The idle demon is a system task, running when no other task is ready */
+N  /* to run. The 'os_xxx' function calls are not allowed from this task.  */
+N
+N  for (;;) {
+N  /* HERE: include optional user code to be executed when no task runs.*/
+N  }
+N}
+N
+N
+N/*--------------------------- os_tmr_call -----------------------------------*/
+N
+Nvoid os_tmr_call (U16 info) {
+N  /* This function is called when the user timer has expired. Parameter   */
+N  /* 'info' holds the value, defined when the timer was created.          */
+N
+N  /* HERE: include optional user code to be executed on timeout. */
+N}
+N
+N
+N/*--------------------------- os_error --------------------------------------*/
+N
+Nvoid os_error (U32 err_code) {
+N  /* This function is called when a runtime error is detected. Parameter */
+N  /* 'err_code' holds the runtime error code (defined in RTL.H).         */
+N
+N  /* HERE: include optional code to be executed on runtime error. */
+N  for (;;);
+N}
+N
+N
+N/*----------------------------------------------------------------------------
+N *      RTX Configuration Functions
+N *---------------------------------------------------------------------------*/
+N
+N#include <RTX_lib.c>
+L 1 "C:\Software\Keil\ARM\RV31\INC\RTX_lib.c" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - RTX
+N *----------------------------------------------------------------------------
+N *      Name:    RTX_LIB.C
+N *      Purpose: RTX Kernel System Configuration
+N *      Rev.:    V4.20
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2011 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#pragma thumb
+N#pragma O3
+N
+N/*----------------------------------------------------------------------------
+N *      Definitions
+N *---------------------------------------------------------------------------*/
+N#if   (__TARGET_ARCH_6S_M || __TARGET_ARCH_7_M || __TARGET_ARCH_7E_M)
+X#if   (__TARGET_ARCH_6S_M || 1 || __TARGET_ARCH_7E_M)
+N #define __CM__   1
+N#elif (__TARGET_ARCH_7_R)
+S #define __CR__   1
+S#else
+S #define __ARM__  1
+N#endif
+N
+N#if (__ARM__ || __CR__)
+S #define runtask_id()   os_tsk_self()
+S #define mutex_init(m)  os_mut_init(m)
+N#endif
+N#if (__CM__)
+X#if (1)
+N #define OS_TIMER       0
+N #define runtask_id()   rt_tsk_self()
+N #define mutex_init(m)  rt_mut_init(m)
+N#endif
+N
+N#define mutex_wait(m)   os_mut_wait(m,0xFFFF)
+N#define mutex_rel(m)    os_mut_release(m)
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Global Variables
+N *---------------------------------------------------------------------------*/
+NU16 const os_maxtaskrun = OS_TASKCNT;
+XU16 const os_maxtaskrun = 6;
+NU32 const os_stackinfo  = (OS_STKCHECK<<24)| (OS_PRIVCNT<<16) | (OS_STKSIZE*4);
+XU32 const os_stackinfo  = (1<<24)| (0<<16) | (275*4);
+NU32 const os_rrobin     = (OS_ROBIN << 16) | OS_ROBINTOUT;
+XU32 const os_rrobin     = (1 << 16) | 5;
+N#if (__CM__)
+X#if (1)
+N U32 const os_trv       = OS_TRV;
+X U32 const os_trv       = ((U32)(((double)100000000*(double)10000)/1E6)-1);
+N#endif
+N#if (__CM__ || __CR__)
+X#if (1 || __CR__)
+N U8  const os_flags     = OS_RUNPRIV;
+X U8  const os_flags     = 0;
+N#endif
+N
+N/* Export following defines to uVision debugger. */
+NU32 const os_clockrate __attribute__((used)) =  OS_TICK;
+XU32 const os_clockrate __attribute__((used)) =  10000;
+NU32 const os_timernum  __attribute__((used)) = (OS_TIMER << 16) | OS_TIMERCNT;
+XU32 const os_timernum  __attribute__((used)) = (0 << 16) | 0;
+N
+N/* Memory pool for TCB allocation    */
+N_declare_box (mp_tcb, OS_TCB_SIZE, OS_TASKCNT);
+XU32 mp_tcb[(((48)+3)/4)*(6) + 3];
+NU16 const mp_tcb_size = sizeof(mp_tcb);
+N
+N/* Memory pool for System stack allocation (+ os_idle_demon). */
+N_declare_box8 (mp_stk, OS_STKSIZE*4, OS_TASKCNT-OS_PRIVCNT+1);
+XU64 mp_stk[(((275*4)+7)/8)*(6-0+1) + 2];
+NU32 const mp_stk_size = sizeof(mp_stk);
+N
+N#ifndef OS_FIFOSZ
+S #define OS_FIFOSZ        16
+N#endif
+N
+N/* Fifo Queue buffer for ISR requests.*/
+NU32 os_fifo[OS_FIFOSZ*2+1];
+XU32 os_fifo[16*2+1];
+NU8 const os_fifo_size = OS_FIFOSZ;
+XU8 const os_fifo_size = 16;
+N
+N/* An array of Active task pointers. */
+Nvoid *os_active_TCB[OS_TASKCNT];
+Xvoid *os_active_TCB[6];
+N
+N#if (OS_TIMERCNT != 0)
+X#if (0 != 0)
+S /* Memory pool for User Timer allocation */
+S _declare_box (mp_tmr, OS_TMR_SIZE, OS_TIMERCNT);
+S U16 const mp_tmr_size = sizeof(mp_tmr);
+S U32 const *m_tmr = &mp_tmr[0];
+N#else
+N U32 const *m_tmr = NULL;
+X U32 const *m_tmr = ((void *) 0);
+N U16 const mp_tmr_size = 0;
+N#endif
+N
+N#ifndef __MICROLIB
+N /* A memory space for arm standard library. */
+N static U32    std_libspace[OS_TASKCNT][96/4];
+X static U32    std_libspace[6][96/4];
+N static OS_MUT std_libmutex[OS_MUTEXCNT];
+X static OS_MUT std_libmutex[8];
+N static U32    nr_mutex;
+N extern void  *__libspace_start;
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N *      Tick Timer configuration for ARM7/9, Cortex-R4
+N *---------------------------------------------------------------------------*/
+N
+N#if (__ARM__ || __CR__)
+S
+Sextern void os_clock_interrupt (void);
+S
+S/*--------------------------- os_tmr_init -----------------------------------*/
+S
+S#ifndef __OS_TMR_INIT
+Svoid os_tmr_init (void) {
+S  /* Initialize hardware timer as system tick timer. */
+S  OS_TINIT();
+S}
+S#endif
+S
+S/*--------------------------- os_tmr_reload ---------------------------------*/
+S
+S#if (!defined(__OS_TMR_RELOAD) && defined(OS_TREL))
+Svoid os_tmr_reload (void) {
+S  /* Reload system timer for next period. */
+S  OS_TREL();
+S}
+S#endif
+S
+S/*--------------------------- os_tmr_force_irq ------------------------------*/
+S
+S#ifndef __OS_TMR_FORCE_IRQ
+Svoid os_tmr_force_irq (void) {
+S  /* Force a timer interrupt. */
+S  OS_TFIRQ();
+S}
+S#endif
+S
+S/*--------------------------- os_tmr_inspect_cnt ----------------------------*/
+S
+S#ifndef __OS_TMR_INSPECT_CNT
+SU32 os_tmr_inspect_cnt (void) {
+S  /* Inspect current value of rtx timer. */
+S  return (OS_TVAL);
+S}
+S#endif
+S
+S/*--------------------------- os_tmr_inspect_ovf ----------------------------*/
+S
+S#ifndef __OS_TMR_INSPECT_OVF
+SBOOL os_tmr_inspect_ovf (void) {
+S  /* Inspect current state of timer overflow flag. */
+S  return (OS_TOVF);
+S}
+S#endif
+S
+S/*--------------------------- os_irq_ack_lock -------------------------------*/
+S
+S#ifndef __OS_IRQ_ACK_LOCK
+Svoid os_irq_ack_lock (void) {
+S  /* Acknowledge and disable a timer interrupt. */
+S  OS_TIACK();
+S  OS_LOCK();
+S}
+S#endif
+S
+S/*--------------------------- tsk_lock --------------------------------------*/
+S
+S#ifndef __TSK_LOCK
+Svoid __swi(5) tsk_lock (void);
+Svoid __SWI_5           (void) {
+S  /* Disable RTX System Tick Timer interrupts. */
+S  OS_LOCK();
+S}
+S#endif
+S
+S/*--------------------------- tsk_unlock ------------------------------------*/
+S
+S#ifndef __TSK_UNLOCK
+Svoid tsk_unlock (void) {
+S  /* Enable RTX System Tick Timer Interrupts. */
+S  OS_UNLOCK();
+S}
+S#endif
+S
+N#endif /* #if (__ARM__ || __CR__) */
+N
+N
+N/*----------------------------------------------------------------------------
+N *      RT Agent interface for ARM7/9
+N *---------------------------------------------------------------------------*/
+N
+N#if (__ARM__ && __RTA_RTX_CONFIG)
+S
+S#include "RT_Agent.h"
+S
+S#if (__RTA_ENABLED && __RTA_RTX_TASK_SWITCHING)
+S/*
+S * RT Agent - Event Viewer Packing
+S *
+S *    |---+---------+---------+------|
+S *    | 0 | os_time | hw_tick | t_id |
+S *    |---+---------+---------+------|
+S * bit  31          ^          7    0
+S *                  +-- OS_TIME_SL
+S *
+S *  value hw_tick is truncated    by number of bits specified by OS_TVAL_SR
+S *  value os_time is shifted left by number of bits specified by OS_TIME_SL
+S */
+S
+S/* Define pack shift values depending on the tick time value OS_TICK.  */
+S/* Packing results in a time of ~1 second being represented, and an    */
+S/* accuracy of ~0.15us. (based on the hw tick timer accuracy.          */
+S
+S#if   ((OS_TICK) < 0x80)        // OS_TICK < 128us  ==> tick 14 bits, timer 9
+S #define OS_TIME_SL     17
+S#elif ((OS_TICK) < 0x100)       // OS_TICK < 256us  ==> tick 13 bits, timer 10
+S #define OS_TIME_SL     18
+S#elif ((OS_TICK) < 0x200)       // OS_TICK < 512us  ==> tick 12 bits, timer 11
+S #define OS_TIME_SL     19
+S#elif ((OS_TICK) < 0x400)       // OS_TICK < 1.024ms ==> tick 11 bits, timer 12
+S #define OS_TIME_SL     20
+S#elif ((OS_TICK) < 0x800)       // OS_TICK < 2.048ms ==> tick 10 bits, timer 13
+S #define OS_TIME_SL     21
+S#elif ((OS_TICK) < 0x1000)      // OS_TICK < 4.096ms ==> tick 9 bits, timer 14
+S #define OS_TIME_SL     22
+S#elif ((OS_TICK) < 0x2000)      // OS_TICK < 8.192ms ==> tick 8 bits, timer 15
+S #define OS_TIME_SL     23
+S#elif ((OS_TICK) < 0x4000)      // OS_TICK < 16.384ms ==> tick 7 bits, timer 16
+S #define OS_TIME_SL     24
+S#elif ((OS_TICK) < 0x8000)      // OS_TICK < 32.768ms ==> tick 6 bits, timer 17
+S #define OS_TIME_SL     25
+S#elif ((OS_TICK) < 0x10000)     // OS_TICK < 65.536ms ==> tick 5 bits, timer 18
+S #define OS_TIME_SL     26
+S#elif ((OS_TICK) < 0x20000)     // OS_TICK < 131.070ms ==> tick 4 bits, timer 19
+S #define OS_TIME_SL     27
+S#elif ((OS_TICK) < 0x40000)     // OS_TICK < 262.140ms ==> tick 3 bits, timer 20
+S #define OS_TIME_SL     28
+S#elif ((OS_TICK) < 0x80000)     // OS_TICK < 524.280ms ==> tick 2 bits, timer 21
+S #define OS_TIME_SL     29
+S#else                           // OS_TICK >= 524.280ms ==> tick 1 bit, timer 22
+S #define OS_TIME_SL     30
+S#endif
+S
+S/* Define hw_tick truncation depending on the timer reload value OS_TRV */
+S#if ((OS_TRV) < 0x10)
+S #define OS_TVAL_SR     (12 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x20)
+S #define OS_TVAL_SR     (13 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x40)
+S #define OS_TVAL_SR     (14 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x80)
+S #define OS_TVAL_SR     (15 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x100)
+S #define OS_TVAL_SR     (16 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x200)
+S #define OS_TVAL_SR     (17 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x400)
+S #define OS_TVAL_SR     (18 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x800)
+S #define OS_TVAL_SR     (19 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x1000)
+S #define OS_TVAL_SR     (20 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x2000)
+S #define OS_TVAL_SR     (21 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x4000)
+S #define OS_TVAL_SR     (22 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x8000)
+S #define OS_TVAL_SR     (23 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x10000)
+S #define OS_TVAL_SR     (24 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x20000)
+S #define OS_TVAL_SR     (25 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x40000)
+S #define OS_TVAL_SR     (26 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x80000)
+S #define OS_TVAL_SR     (27 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x100000)
+S #define OS_TVAL_SR     (28 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x200000)
+S #define OS_TVAL_SR     (29 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x400000)
+S #define OS_TVAL_SR     (30 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x800000)
+S #define OS_TVAL_SR     (31 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x1000000)
+S #define OS_TVAL_SR     (32 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x2000000)
+S #define OS_TVAL_SR     (33 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x4000000)
+S #define OS_TVAL_SR     (34 - OS_TIME_SL)
+S#elif ((OS_TRV) < 0x8000000)
+S #define OS_TVAL_SR     (35 - OS_TIME_SL)
+S#else
+S #define OS_TVAL_SR     (36 - OS_TIME_SL)
+S#endif
+S
+S#if (OS_TVAL_SR < 0)
+S #undef  OS_TVAL_SR
+S #define OS_TVAL_SR     0
+S#endif
+S
+Sextern U16 os_time;
+S
+S/* Export following defines to uVision debugger. */
+SU8  const os_time_sl __attribute__((used)) = OS_TIME_SL;
+SU32 const os_treload __attribute__((used)) = OS_TRV;
+S
+S__weak extern void RTA_Task_Mon (unsigned int tsk);
+S
+S#define RTA_CMD_RTX_TASK_INFO   0x0A
+S
+Svoid rt_notify (U32 ptask, U32 create_tid) {
+S  /* Notify RTA user of a task creation/deletion. */
+S  U32 msg[2];
+S
+S  /* (BOOL)create << 8 | task_id - parameter packed in RTX library */
+S  msg[0] = create_tid;
+S  msg[1] = (U32)ptask;
+S  RTA_Msg (RTA_CMD_RTX_TASK_INFO, (U32 *)&msg, 2);
+S}
+S
+S/*--------------------------- rt_post_taskswitch ----------------------------*/
+S
+Svoid rt_post_taskswitch (U32 task_id)  {
+S  U32 tsk_event;
+S
+S  /* Add the current timer value (with bottom bits removed) */
+S  tsk_event = OS_TVAL >> OS_TVAL_SR;
+S  /* Shif timer value into place, add the task ID. */
+S  tsk_event = (tsk_event << 8) | task_id;
+S  /* Add the OS tick time. */
+S  tsk_event = tsk_event | (os_time << OS_TIME_SL);
+S  /* Mask off the top bit to indicate a task switch message. */
+S  tsk_event &= 0x7FFFFFFFU;
+S
+S  RTA_Task_Mon (tsk_event);
+S}
+S
+S#endif /* #if (__RTA_ENABLED && __RTA_RTX_TASK_SWITCHING) */
+S
+S/*--------------------------- rt_init ---------------------------------------*/
+S
+Svoid rt_init (void) {
+S  RTA_Init ();
+S}
+S
+S
+S#include <RT_Agent.c>
+S
+N#endif /* #if (__ARM__ && __RTA_RTX_CONFIG) */
+N                                              
+N
+N/*----------------------------------------------------------------------------
+N *      RTX Optimizations (empty functions)
+N *---------------------------------------------------------------------------*/
+N
+N#if (__ARM__ || __CR__) && OS_ROBIN == 0
+X#if (__ARM__ || __CR__) && 1 == 0
+S void os_init_robin (void) {;}
+S void os_chk_robin  (void) {;}
+N#endif
+N
+N#if (__ARM__ || __CR__) && OS_STKCHECK == 0
+X#if (__ARM__ || __CR__) && 1 == 0
+S void os_stk_check  (void) {;};
+N#endif
+N
+N#if (__CM__) && OS_ROBIN == 0
+X#if (1) && 1 == 0
+S void rt_init_robin (void) {;}
+S void rt_chk_robin  (void) {;}
+N#endif
+N
+N#if (__CM__) && OS_STKCHECK == 0
+X#if (1) && 1 == 0
+S void rt_stk_check  (void) {;};
+N#endif
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Standard Library multithreading interface
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __MICROLIB
+N
+N/*--------------------------- __user_perthread_libspace ---------------------*/
+N
+Nvoid *__user_perthread_libspace (void) {
+N  /* Provide a separate libspace for each task. */
+N  U32 idx;
+N
+N  idx = runtask_id ();
+X  idx = rt_tsk_self();
+N  if (idx == 0) {
+N    /* RTX not running yet. */
+N    return (&__libspace_start);
+N  }
+N  return ((void *)&std_libspace[idx-1]);
+N}
+N
+N/*--------------------------- _mutex_initialize -----------------------------*/
+N
+Nint _mutex_initialize (OS_ID *mutex) {
+N  /* Allocate and initialize a system mutex. */
+N
+N  if (nr_mutex >= OS_MUTEXCNT) {
+X  if (nr_mutex >= 8) {
+N    /* If you are here, you need to increase the number OS_MUTEXCNT. */
+N    for (;;);
+N  }
+N  *mutex = &std_libmutex[nr_mutex++];
+N  mutex_init (*mutex);
+X  rt_mut_init(*mutex);
+N  return (1);
+N}
+N
+N
+N/*--------------------------- _mutex_acquire --------------------------------*/
+N
+Nvoid _mutex_acquire (OS_ID *mutex) {
+N  /* Acquire a system mutex, lock stdlib resources. */
+N  if (runtask_id ()) {
+X  if (rt_tsk_self()) {
+N    /* RTX running, acquire a mutex. */
+N    mutex_wait (*mutex);
+X    _os_mut_wait((U32)rt_mut_wait,*mutex,0xFFFF);
+N  }
+N}
+N
+N
+N/*--------------------------- _mutex_release --------------------------------*/
+N
+Nvoid _mutex_release (OS_ID *mutex) {
+N  /* Release a system mutex, unlock stdlib resources. */
+N  if (runtask_id ()) {
+X  if (rt_tsk_self()) {
+N    /* RTX runnning, release a mutex. */
+N    mutex_rel (*mutex);
+X    _os_mut_release((U32)rt_mut_release,*mutex);
+N  }
+N}
+N
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N
+L 177 "src\RTX_Conf_CM.c" 2
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
